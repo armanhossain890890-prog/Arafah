@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Livestock Tracker</title>
+<style>
+  :root {
+    --bg:#f7f6f3;--surface:#fff;--surface2:#f0ede8;--border:#e8e4dd;
+    --text:#18181a;--text2:#717068;--text3:#a8a49e;
+    --green:#1e6e42;--green-bg:#eaf4ee;--red:#b02a2a;--red-bg:#fceaea;
+    --amber:#9a5408;--amber-bg:#fef2e0;--blue:#1756a0;--blue-bg:#e6eef9;
+    --purple:#5b3fa0;--purple-bg:#f0ecfa;
+    --r:12px;--rsm:8px;--shadow:0 1px 3px rgba(0,0,0,0.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px;min-height:100vh;}
+
+  /* HEADER */
+  .header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:200;}
+  .hlogo{width:32px;height:32px;background:var(--text);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+  .htitle{font-size:15px;font-weight:700;letter-spacing:-.2px;}
+  .hsub{font-size:11px;color:var(--text3);}
+  .hsync{margin-left:auto;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text2);font-family:inherit;display:flex;align-items:center;gap:5px;}
+
+  /* NAV */
+  .nav{background:var(--surface);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .nav::-webkit-scrollbar{display:none;}
+  .nav-tab{padding:12px 16px;font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0;}
+  .nav-tab.active{color:var(--text);border-bottom-color:var(--text);}
+
+  /* PAGES */
+  .page{display:none;padding:16px;max-width:680px;margin:0 auto;padding-bottom:48px;}
+  .page.active{display:block;}
+
+  /* CARD */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px;box-shadow:var(--shadow);}
+  .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+
+  /* STATS */
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;box-shadow:var(--shadow);}
+  .slabel{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+  .svalue{font-size:22px;font-weight:700;letter-spacing:-.5px;line-height:1;}
+  .svalue.green{color:var(--green);}
+  .svalue.red{color:var(--red);}
+
+  /* BUTTONS */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border-radius:var(--rsm);font-size:14px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:inherit;min-height:42px;}
+  .btn:active{opacity:.75;}
+  .btn-primary{background:var(--text);color:#fff;border-color:var(--text);}
+  .btn-sm{padding:7px 12px;font-size:13px;min-height:34px;border-radius:6px;}
+  .btn-danger{border-color:#f0c0c0;color:var(--red);background:var(--red-bg);}
+  .btn-success{border-color:#a8d8bc;color:var(--green);background:var(--green-bg);}
+  .btn-full{width:100%;}
+
+  /* FORMS */
+  .fg{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+  .frow{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;}
+  input,select,textarea{font-family:inherit;font-size:15px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--rsm);background:var(--surface);color:var(--text);outline:none;width:100%;-webkit-appearance:none;transition:border .15s;}
+  input:focus,select:focus,textarea:focus{border-color:var(--text);}
+  textarea{resize:vertical;min-height:70px;}
+
+  /* BADGES */
+  .badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;}
+  .badge-green{background:var(--green-bg);color:var(--green);}
+  .badge-red{background:var(--red-bg);color:var(--red);}
+  .badge-amber{background:var(--amber-bg);color:var(--amber);}
+  .badge-blue{background:var(--blue-bg);color:var(--blue);}
+  .badge-gray{background:var(--surface2);color:var(--text2);}
+  .badge-purple{background:var(--purple-bg);color:var(--purple);}
+
+  /* ALERTS */
+  .alert{padding:11px 14px;border-radius:var(--rsm);font-size:13px;margin-bottom:10px;line-height:1.5;}
+  .alert-amber{background:var(--amber-bg);color:var(--amber);}
+  .alert-green{background:var(--green-bg);color:var(--green);}
+  .alert-red{background:var(--red-bg);color:var(--red);}
+
+  /* MONTH CARD */
+  .month-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow);}
+  .month-title{font-size:14px;font-weight:700;}
+  .prow{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);gap:8px;}
+  .prow:last-of-type{border-bottom:none;}
+  .pname{font-size:14px;font-weight:500;}
+  .pamt{font-size:12px;color:var(--text3);}
+  .ptoggle{padding:7px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:inherit;min-width:80px;text-align:center;}
+  .ptoggle.paid{background:var(--green-bg);color:var(--green);}
+  .ptoggle.missed{background:var(--red-bg);color:var(--red);}
+  .ptoggle.pending{background:var(--surface2);color:var(--text3);}
+  .mtotal{display:flex;justify-content:space-between;padding-top:10px;margin-top:2px;font-size:13px;color:var(--text2);border-top:1px solid var(--border);}
+
+  /* ANIMAL CARD */
+  .acard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow);}
+  .acard.sold{border-left:3px solid var(--green);}
+  .atop{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:8px;}
+  .aicon{width:44px;height:44px;background:var(--amber-bg);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;position:relative;}
+  .qty-badge{position:absolute;top:-6px;right:-6px;background:var(--text);color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:2px 5px;min-width:18px;text-align:center;}
+  .aname{font-size:16px;font-weight:700;letter-spacing:-.2px;}
+  .atype{font-size:12px;color:var(--text3);margin-top:2px;}
+  .mgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;}
+  .mbox{background:var(--surface2);border-radius:var(--rsm);padding:8px 10px;}
+  .mlbl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;}
+  .mval{font-size:13px;font-weight:600;margin-top:3px;}
+  .eitem{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;gap:8px;}
+  .eitem:last-child{border-bottom:none;}
+  .nbox{background:var(--surface2);border-radius:var(--rsm);padding:10px 12px;font-size:13px;color:var(--text2);margin-top:6px;line-height:1.5;}
+  .aactions{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+  .slbl{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 7px;}
+
+  /* PROGRESS BAR */
+  .prog-wrap{background:var(--border);border-radius:99px;height:10px;overflow:hidden;margin:8px 0;}
+  .prog-bar{height:100%;border-radius:99px;background:var(--green);transition:width .4s;}
+
+  /* SEARCH BAR */
+  .search-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);padding:10px 14px;font-size:14px;width:100%;margin-bottom:12px;font-family:inherit;outline:none;}
+  .search-bar:focus{border-color:var(--text);}
+  .filter-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;}
+  .filter-chip{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-family:inherit;}
+  .filter-chip.active{background:var(--text);color:#fff;border-color:var(--text);}
+
+  /* SORT ROW */
+  .sort-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+  .sort-row select{flex:1;font-size:13px;padding:8px 10px;}
+
+  /* EXPENSE CHART */
+  .exp-chart-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .exp-bar-wrap{flex:1;background:var(--border);border-radius:99px;height:8px;overflow:hidden;}
+  .exp-bar{height:100%;border-radius:99px;}
+  .exp-label{font-size:13px;font-weight:500;width:120px;}
+  .exp-pct{font-size:12px;color:var(--text3);width:36px;text-align:right;}
+
+  /* MODAL */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:500;align-items:flex-end;justify-content:center;backdrop-filter:blur(2px);}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--surface);border-radius:16px 16px 0 0;padding:8px 16px 36px;width:100%;max-height:92vh;overflow-y:auto;}
+  @media(min-width:600px){.modal-overlay{align-items:center;}.modal{border-radius:var(--r);max-width:500px;padding:20px;}}
+  .mhandle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:10px auto 18px;}
+  .mhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+  .mclose{background:var(--surface2);border:none;width:28px;height:28px;border-radius:50%;font-size:14px;cursor:pointer;color:var(--text2);font-family:inherit;display:flex;align-items:center;justify-content:center;}
+
+  /* SYNC PAGE */
+  .srow{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;cursor:pointer;box-shadow:var(--shadow);}
+  .srow:active{background:var(--surface2);}
+  .sico{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+
+  /* PARTNER BLOCK */
+  .pblock{background:var(--surface2);border-radius:var(--rsm);padding:12px;margin-bottom:8px;}
+
+  /* SELL BREAKDOWN */
+  .sell-line{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;}
+  .sell-line.total{font-size:15px;font-weight:700;border-top:1px solid rgba(0,0,0,0.1);margin-top:4px;padding-top:8px;}
+  .sell-box{border-radius:var(--rsm);padding:12px 14px;margin-bottom:12px;}
+
+  /* MISC */
+  .empty-state{text-align:center;padding:48px 20px;color:var(--text3);}
+  .eicon{font-size:36px;margin-bottom:10px;opacity:.6;}
+  .divider{height:1px;background:var(--border);margin:14px 0;}
+  .rb{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .text-green{color:var(--green);}
+  .text-red{color:var(--red);}
+  .chevron{color:var(--text3);font-size:16px;margin-left:auto;}
+  .section-title{font-size:17px;font-weight:700;margin-bottom:14px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="hlogo">🐄</div>
+  <div><div class="htitle" id="header-title">Livestock Tracker</div><div class="hsub">Partnership fund</div></div>
+  <button class="hsync" onclick="showPage('sync')">⇅ Sync</button>
+</div>
+
+<div class="nav">
+  <div class="nav-tab active" onclick="showPage('dashboard')">Dashboard</div>
+  <div class="nav-tab" onclick="showPage('contributions')">Contributions</div>
+  <div class="nav-tab" onclick="showPage('animals')">Animals</div>
+  <div class="nav-tab" onclick="showPage('history')">History</div>
+  <div class="nav-tab" onclick="showPage('reports')">Reports</div>
+  <div class="nav-tab" onclick="showPage('settings')">Settings</div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+  <!-- BALANCE CARD -->
+  <div class="card" id="balance-card" style="background:var(--surface);margin-bottom:12px;"></div>
+  <div id="dash-alerts"></div>
+  <div class="stat-grid" id="dash-stats"></div>
+  <!-- GOAL -->
+  <div class="card" id="goal-card" style="display:none;">
+    <div class="rb" style="margin-bottom:8px;">
+      <div><div style="font-size:13px;font-weight:700;" id="goal-title"></div><div style="font-size:12px;color:var(--text3);" id="goal-sub"></div></div>
+      <span id="goal-pct" style="font-size:18px;font-weight:700;"></span>
+    </div>
+    <div class="prog-wrap"><div class="prog-bar" id="goal-bar"></div></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h2 style="font-size:15px;font-weight:700;">Partner balances</h2></div>
+    <div id="partner-balances"></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h2 style="font-size:15px;font-weight:700;">Active animals</h2><span id="active-count" class="badge badge-blue"></span></div>
+    <div id="dash-animals"></div>
+  </div>
+</div>
+
+<!-- CONTRIBUTIONS -->
+<div class="page" id="page-contributions">
+  <div class="rb" style="margin-bottom:14px;">
+    <div class="section-title" style="margin-bottom:0;">Contributions</div>
+    <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-month');initAddMonth()">+ Month</button>
+  </div>
+  <div id="contributions-list"></div>
+</div>
+
+<!-- ANIMALS -->
+<div class="page" id="page-animals">
+  <div class="rb" style="margin-bottom:12px;">
+    <div class="section-title" style="margin-bottom:0;">Animals</div>
+    <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-animal');initAddAnimal()">+ Animal</button>
+  </div>
+  <input class="search-bar" id="animal-search" placeholder="🔍  Search animals…" oninput="renderAnimals()">
+  <div class="filter-row" id="filter-row"></div>
+  <div id="animals-list"></div>
+</div>
+
+<!-- HISTORY -->
+<div class="page" id="page-history">
+  <div class="section-title">History</div>
+  <div class="card" style="margin-bottom:14px;"><div id="history-summary"></div></div>
+  <div class="sort-row">
+    <label style="white-space:nowrap;">Sort by</label>
+    <select id="history-sort" onchange="renderHistory()">
+      <option value="recent">Most recent</option>
+      <option value="profit-high">Highest profit</option>
+      <option value="profit-low">Lowest profit</option>
+      <option value="duration">Longest held</option>
+    </select>
+  </div>
+  <div id="history-list"></div>
+</div>
+
+<!-- REPORTS -->
+<div class="page" id="page-reports">
+  <div class="section-title">Reports</div>
+  <!-- MONTHLY SUMMARY -->
+  <div class="card">
+    <div class="card-header"><h2 style="font-size:15px;font-weight:700;">Monthly summary</h2></div>
+    <div class="frow" style="margin-bottom:10px;">
+      <div class="fg" style="margin-bottom:0;"><label>Year</label><input type="number" id="rep-year" inputmode="numeric"></div>
+      <div class="fg" style="margin-bottom:0;"><label>Month</label>
+        <select id="rep-month">
+          <option value="1">January</option><option value="2">February</option><option value="3">March</option>
+          <option value="4">April</option><option value="5">May</option><option value="6">June</option>
+          <option value="7">July</option><option value="8">August</option><option value="9">September</option>
+          <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="generateReport()">Generate</button>
+    <div id="report-out" style="margin-top:14px;"></div>
+  </div>
+  <!-- EXPENSE BREAKDOWN -->
+  <div class="card">
+    <div class="card-header"><h2 style="font-size:15px;font-weight:700;">Expense breakdown</h2></div>
+    <div id="exp-breakdown"></div>
+  </div>
+  <!-- GOAL TRACKER -->
+  <div class="card">
+    <div class="card-header"><h2 style="font-size:15px;font-weight:700;" id="goal-form-title">Savings goal</h2></div>
+    <!-- Active goal view -->
+    <div id="active-goal-view" style="display:none;margin-bottom:14px;"></div>
+    <!-- New goal form -->
+    <div id="goal-form">
+      <div class="fg"><label>Goal name</label><input type="text" id="goal-name" placeholder="e.g. Buy a goat"></div>
+      <div class="frow">
+        <div class="fg"><label>Target amount</label><input type="number" id="goal-target" placeholder="0" inputmode="numeric"></div>
+        <div class="fg"><label>Deadline (optional)</label><input type="date" id="goal-deadline"></div>
+      </div>
+      <button class="btn btn-primary" onclick="saveGoal()">Set goal</button>
+    </div>
+  </div>
+  <!-- GOAL HISTORY -->
+  <div class="card">
+    <div class="card-header"><h2 style="font-size:15px;font-weight:700;">Completed goals</h2></div>
+    <div id="goal-history-list"><div style="font-size:13px;color:var(--text3);">No completed goals yet.</div></div>
+  </div>
+</div>
+
+<!-- SYNC -->
+<div class="page" id="page-sync">
+  <div class="section-title">Sync data</div>
+  <div class="srow" onclick="exportData()">
+    <div class="sico" style="background:var(--blue-bg);">📤</div>
+    <div><div style="font-size:15px;font-weight:600;margin-bottom:2px;">Export</div><div style="font-size:12px;color:var(--text3);" id="last-export-label">Save data as a file to share</div></div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="srow" onclick="document.getElementById('import-file').click()">
+    <div class="sico" style="background:var(--green-bg);">📥</div>
+    <div><div style="font-size:15px;font-weight:600;margin-bottom:2px;">Import</div><div style="font-size:12px;color:var(--text3);">Load data from a file</div></div>
+    <span class="chevron">›</span>
+  </div>
+  <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)">
+</div>
+
+<!-- SETTINGS -->
+<div class="page" id="page-settings">
+  <div class="section-title">Settings</div>
+  <div class="card">
+    <div class="fg"><label>Group name</label><input type="text" id="set-group-name"></div>
+    <div class="fg" style="margin-bottom:0;"><label>Currency</label><input type="text" id="set-currency" style="max-width:90px;"></div>
+  </div>
+  <div class="card">
+    <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Partners</div>
+    <div id="partner-settings"></div>
+    <button class="btn btn-primary btn-full" style="margin-top:4px;" onclick="saveSettings()">Save</button>
+  </div>
+  <div class="card" style="border-color:#f0c0c0;">
+    <div style="font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Danger zone</div>
+    <button class="btn btn-danger btn-sm" onclick="clearAllData()">Clear all data</button>
+  </div>
+</div>
+
+<!-- MODALS -->
+
+<!-- ADD MONTH -->
+<div class="modal-overlay" id="modal-add-month">
+  <div class="modal"><div class="mhandle"></div>
+    <div class="mhead"><h2 style="font-size:17px;font-weight:700;">Add month</h2><button class="mclose" onclick="closeModal('modal-add-month')">✕</button></div>
+    <div class="frow">
+      <div class="fg"><label>Year</label><input type="number" id="m-year" inputmode="numeric"></div>
+      <div class="fg"><label>Month</label>
+        <select id="m-month">
+          <option value="1">January</option><option value="2">February</option><option value="3">March</option>
+          <option value="4">April</option><option value="5">May</option><option value="6">June</option>
+          <option value="7">July</option><option value="8">August</option><option value="9">September</option>
+          <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="addMonth()">Add</button>
+  </div>
+</div>
+
+<!-- ADD ANIMAL -->
+<div class="modal-overlay" id="modal-add-animal">
+  <div class="modal"><div class="mhandle"></div>
+    <div class="mhead"><h2 style="font-size:17px;font-weight:700;">Add animal</h2><button class="mclose" onclick="closeModal('modal-add-animal')">✕</button></div>
+    <div class="fg"><label>Type</label>
+      <select id="a-type"><option>🐄 Cow</option><option>🐐 Goat</option><option>🐑 Sheep</option><option>🐃 Buffalo</option><option>🦆 Duck</option><option>🐓 Chicken</option><option>🐖 Pig</option><option>Other</option></select>
+    </div>
+    <div class="frow">
+      <div class="fg"><label>Name / Tag</label><input type="text" id="a-name" placeholder="e.g. Lal Goru #1"></div>
+      <div class="fg"><label>Quantity</label><input type="number" id="a-qty" value="1" min="1" inputmode="numeric"></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label>Purchase date</label><input type="date" id="a-buy-date"></div>
+      <div class="fg"><label>Total cost</label><input type="number" id="a-cost" placeholder="0" inputmode="numeric"></div>
+    </div>
+    <div style="background:var(--surface2);border-radius:var(--rsm);padding:12px;margin-bottom:12px;">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Caretaker</div>
+      <div class="frow">
+        <div class="fg" style="margin-bottom:0;"><label>Name</label><input type="text" id="a-caretaker-name" placeholder="Optional"></div>
+        <div class="fg" style="margin-bottom:0;"><label>Profit share %</label><input type="number" id="a-caretaker-pct" placeholder="0" min="0" max="100" inputmode="numeric"></div>
+      </div>
+    </div>
+    <div class="fg"><label>Notes</label><textarea id="a-notes" placeholder="Weight, source, health…"></textarea></div>
+    <button class="btn btn-primary btn-full" onclick="addAnimal()">Add</button>
+  </div>
+</div>
+
+<!-- ADD EXPENSE -->
+<div class="modal-overlay" id="modal-add-expense">
+  <div class="modal"><div class="mhandle"></div>
+    <div class="mhead"><h2 style="font-size:17px;font-weight:700;">Add expense</h2><button class="mclose" onclick="closeModal('modal-add-expense')">✕</button></div>
+    <input type="hidden" id="exp-animal-id">
+    <div class="fg"><label>Category</label>
+      <select id="exp-type"><option>Feed / fodder</option><option>Vet / medicine</option><option>Transport</option><option>Housing / shed</option><option>Other</option></select>
+    </div>
+    <div class="frow">
+      <div class="fg"><label>Amount</label><input type="number" id="exp-amount" placeholder="0" inputmode="numeric"></div>
+      <div class="fg"><label>Date</label><input type="date" id="exp-date"></div>
+    </div>
+    <div class="fg"><label>Note</label><input type="text" id="exp-desc" placeholder="Optional"></div>
+    <button class="btn btn-primary btn-full" onclick="addExpense()">Add</button>
+  </div>
+</div>
+
+<!-- RECORD DEATH / REMOVAL -->
+<div class="modal-overlay" id="modal-death">
+  <div class="modal"><div class="mhandle"></div>
+    <div class="mhead"><h2 style="font-size:17px;font-weight:700;">Record death / removal</h2><button class="mclose" onclick="closeModal('modal-death')">✕</button></div>
+    <input type="hidden" id="death-animal-id">
+    <div class="frow">
+      <div class="fg"><label>Count</label><input type="number" id="death-count" value="1" min="1" inputmode="numeric"></div>
+      <div class="fg"><label>Date</label><input type="date" id="death-date"></div>
+    </div>
+    <div class="fg"><label>Reason</label>
+      <select id="death-reason"><option>Death</option><option>Sold individually</option><option>Lost</option><option>Other</option></select>
+    </div>
+    <div class="fg"><label>Note</label><input type="text" id="death-note" placeholder="Optional"></div>
+    <button class="btn btn-primary btn-full" onclick="recordDeath()">Save</button>
+  </div>
+</div>
+
+<!-- SELL -->
+<div class="modal-overlay" id="modal-sell">
+  <div class="modal"><div class="mhandle"></div>
+    <div class="mhead"><h2 style="font-size:17px;font-weight:700;">Record sale</h2><button class="mclose" onclick="closeModal('modal-sell')">✕</button></div>
+    <input type="hidden" id="sell-animal-id">
+    <div class="frow">
+      <div class="fg"><label>Sale price</label><input type="number" id="sell-price" placeholder="0" inputmode="numeric" oninput="updateSellPreview()"></div>
+      <div class="fg"><label>Date</label><input type="date" id="sell-date"></div>
+    </div>
+    <div class="fg"><label>Notes</label><textarea id="sell-notes" placeholder="Optional" style="min-height:50px;"></textarea></div>
+    <div id="sell-preview" style="margin-bottom:12px;"></div>
+    <button class="btn btn-primary btn-full" onclick="sellAnimal()">Confirm sale</button>
+  </div>
+</div>
+
+<!-- NOTE -->
+<div class="modal-overlay" id="modal-note">
+  <div class="modal"><div class="mhandle"></div>
+    <div class="mhead"><h2 style="font-size:17px;font-weight:700;">Add note</h2><button class="mclose" onclick="closeModal('modal-note')">✕</button></div>
+    <input type="hidden" id="note-animal-id">
+    <div class="fg"><label>Note</label><textarea id="note-text" style="min-height:100px;"></textarea></div>
+    <button class="btn btn-primary btn-full" onclick="saveNote()">Save</button>
+  </div>
+</div>
+
+<script>
+const MF=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const EM={'🐄 Cow':'🐄','🐐 Goat':'🐐','🐑 Sheep':'🐑','🐃 Buffalo':'🐃','🦆 Duck':'🦆','🐓 Chicken':'🐓','🐖 Pig':'🐖','Other':'🐾'};
+const EXP_COLORS=['#1756a0','#1e6e42','#9a5408','#b02a2a','#5b3fa0'];
+
+function load(){try{return JSON.parse(localStorage.getItem('lt_v3')||'null');}catch{return null;}}
+function save(d){localStorage.setItem('lt_v3',JSON.stringify(d));}
+function def(){return{settings:{groupName:'Our Farm Fund',currency:'৳',lastExport:null,goal:null,
+  partners:[{id:'p1',name:'Partner 1',monthlyAmount:1000},{id:'p2',name:'Partner 2',monthlyAmount:1000},{id:'p3',name:'Partner 3',monthlyAmount:1000}]},
+  months:[],animals:[]};}
+let D=load()||def();
+const c=()=>D.settings.currency||'৳';
+const fmt=n=>c()+Number(n||0).toLocaleString();
+
+/* EXPORT / IMPORT */
+function exportData(){
+  D.settings.lastExport=new Date().toISOString(); save(D);
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(D,null,2)],{type:'application/json'}));
+  a.download=`livestock_${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  updateExportLabel();
+}
+function importData(input){
+  const file=input.files[0]; if(!file)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const imp=JSON.parse(e.target.result);
+      if(!imp.settings||!imp.months||!imp.animals){alert('Invalid file.');return;}
+      if(!confirm('Replace current data?'))return;
+      D=imp; save(D); alert('✅ Imported!'); showPage('dashboard');
+    }catch{alert('Could not read file.');}
+  };
+  r.readAsText(file); input.value='';
+}
+function updateExportLabel(){
+  const el=document.getElementById('last-export-label'); if(!el)return;
+  el.textContent=D.settings.lastExport?'Last: '+new Date(D.settings.lastExport).toLocaleDateString():'Save data as a file to share';
+}
+
+/* NAV */
+function showPage(p){
+  document.querySelectorAll('.page').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(e=>e.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  const m=['dashboard','contributions','animals','history','reports','sync','settings'];
+  const t=document.querySelectorAll('.nav-tab'); const i=m.indexOf(p);
+  if(i>=0&&t[i])t[i].classList.add('active');
+  ({dashboard:renderDashboard,contributions:renderContributions,animals:renderAnimals,
+    history:renderHistory,reports:renderReports,settings:renderSettings,sync:updateExportLabel})[p]?.();
+}
+
+/* SETTINGS */
+function renderSettings(){
+  document.getElementById('set-group-name').value=D.settings.groupName||'';
+  document.getElementById('set-currency').value=D.settings.currency||'৳';
+  document.getElementById('partner-settings').innerHTML=D.settings.partners.map((p,i)=>`
+    <div class="pblock">
+      <div class="fg" style="margin-bottom:8px;"><label>Partner ${i+1}</label><input type="text" id="p-name-${p.id}" value="${p.name}"></div>
+      <div class="fg" style="margin-bottom:0;"><label>Monthly amount</label><input type="number" id="p-amt-${p.id}" value="${p.monthlyAmount}" inputmode="numeric"></div>
+    </div>`).join('');
+}
+function saveSettings(){
+  D.settings.groupName=document.getElementById('set-group-name').value||'Our Farm Fund';
+  D.settings.currency=document.getElementById('set-currency').value||'৳';
+  D.settings.partners.forEach(p=>{
+    const n=document.getElementById('p-name-'+p.id),a=document.getElementById('p-amt-'+p.id);
+    if(n)p.name=n.value||p.name; if(a)p.monthlyAmount=parseFloat(a.value)||0;
+  });
+  save(D); document.getElementById('header-title').textContent=D.settings.groupName; alert('Saved!');
+}
+function clearAllData(){
+  if(!confirm('Delete all data?'))return;
+  localStorage.removeItem('lt_v3'); D=def(); showPage('dashboard');
+}
+
+/* CONTRIBUTIONS */
+function initAddMonth(){
+  const n=new Date();
+  document.getElementById('m-year').value=n.getFullYear();
+  document.getElementById('m-month').value=n.getMonth()+1;
+}
+function addMonth(){
+  const y=parseInt(document.getElementById('m-year').value);
+  const m=parseInt(document.getElementById('m-month').value);
+  const key=`${y}-${String(m).padStart(2,'0')}`;
+  if(D.months.find(x=>x.key===key)){alert('Already exists.');return;}
+  const e={key,year:y,month:m,payments:{}};
+  D.settings.partners.forEach(p=>{e.payments[p.id]='pending';});
+  D.months.push(e); D.months.sort((a,b)=>a.key.localeCompare(b.key));
+  save(D); closeModal('modal-add-month'); renderContributions();
+}
+function togglePay(key,pid){
+  const m=D.months.find(x=>x.key===key); if(!m)return;
+  const cv=m.payments[pid]||'pending';
+  m.payments[pid]=cv==='pending'?'paid':cv==='paid'?'missed':'pending';
+  save(D); renderContributions();
+}
+function delMonth(key){
+  if(!confirm('Remove month?'))return;
+  D.months=D.months.filter(m=>m.key!==key); save(D); renderContributions();
+}
+function renderContributions(){
+  const el=document.getElementById('contributions-list');
+  if(!D.months.length){el.innerHTML='<div class="empty-state"><div class="eicon">📅</div><p>No months yet</p></div>';return;}
+  el.innerHTML=D.months.slice().reverse().map(mo=>{
+    let total=0;
+    const rows=D.settings.partners.map(p=>{
+      const st=mo.payments[p.id]||'pending';
+      if(st==='paid')total+=p.monthlyAmount;
+      const lbl=st==='paid'?'✓ Paid':st==='missed'?'✗ Missed':'Pending';
+      return `<div class="prow">
+        <div><div class="pname">${p.name}</div><div class="pamt">${fmt(p.monthlyAmount)}/mo</div></div>
+        <button class="ptoggle ${st}" onclick="togglePay('${mo.key}','${p.id}')">${lbl}</button>
+      </div>`;
+    }).join('');
+    return `<div class="month-card">
+      <div class="rb" style="margin-bottom:10px;">
+        <div class="month-title">${MF[mo.month-1]} ${mo.year}</div>
+        <button class="btn btn-sm btn-danger" onclick="delMonth('${mo.key}')">Remove</button>
+      </div>${rows}
+      <div class="mtotal"><span>Collected</span><strong>${fmt(total)}</strong></div>
+    </div>`;
+  }).join('');
+}
+
+/* ANIMALS */
+function initAddAnimal(){
+  document.getElementById('a-buy-date').value=new Date().toISOString().split('T')[0];
+  ['a-name','a-cost','a-notes','a-caretaker-name','a-caretaker-pct'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('a-qty').value=1;
+}
+function addAnimal(){
+  const name=document.getElementById('a-name').value.trim();
+  if(!name){alert('Enter a name.');return;}
+  const bd=document.getElementById('a-buy-date').value;
+  if(!bd){alert('Enter a date.');return;}
+  const notes=document.getElementById('a-notes').value.trim();
+  const qty=Math.max(1,parseInt(document.getElementById('a-qty').value)||1);
+  const cname=document.getElementById('a-caretaker-name').value.trim();
+  const cpct=Math.min(100,Math.max(0,parseFloat(document.getElementById('a-caretaker-pct').value)||0));
+  D.animals.push({id:'a'+Date.now(),type:document.getElementById('a-type').value,name,buyDate:bd,
+    qty,currentQty:qty,deaths:[],
+    purchaseCost:parseFloat(document.getElementById('a-cost').value)||0,
+    caretaker:{name:cname||null,pct:cpct},
+    expenses:[],notes:notes?[{date:bd,text:notes}]:[],sold:false,saleDate:null,salePrice:null,saleNotes:'',perPartner:null});
+  save(D); closeModal('modal-add-animal'); renderAnimals();
+}
+
+function dur(from,to){
+  const f=new Date(from),t=to?new Date(to):new Date();
+  let m=(t.getFullYear()-f.getFullYear())*12+(t.getMonth()-f.getMonth());
+  if(m<1)return '<1 mo';
+  const y=Math.floor(m/12),r=m%12;
+  if(!y)return `${r}mo`; if(!r)return `${y}y`; return `${y}y ${r}mo`;
+}
+function totExp(a){return a.expenses.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);}
+function totCost(a){return(parseFloat(a.purchaseCost)||0)+totExp(a);}
+
+function openAddExpense(id){
+  document.getElementById('exp-animal-id').value=id;
+  document.getElementById('exp-date').value=new Date().toISOString().split('T')[0];
+  ['exp-amount','exp-desc'].forEach(i=>document.getElementById(i).value='');
+  openModal('modal-add-expense');
+}
+function addExpense(){
+  const a=D.animals.find(x=>x.id===document.getElementById('exp-animal-id').value);if(!a)return;
+  const amt=parseFloat(document.getElementById('exp-amount').value)||0;
+  if(!amt){alert('Enter amount.');return;}
+  a.expenses.push({id:'e'+Date.now(),type:document.getElementById('exp-type').value,amount:amt,
+    date:document.getElementById('exp-date').value,desc:document.getElementById('exp-desc').value.trim()});
+  save(D); closeModal('modal-add-expense'); renderAnimals(); renderReportsIfActive();
+}
+function delExp(aid,eid){
+  if(!confirm('Remove?'))return;
+  const a=D.animals.find(x=>x.id===aid);if(!a)return;
+  a.expenses=a.expenses.filter(e=>e.id!==eid); save(D); renderAnimals();
+}
+
+function openDeathModal(id){
+  document.getElementById('death-animal-id').value=id;
+  document.getElementById('death-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('death-count').value=1;
+  document.getElementById('death-note').value='';
+  openModal('modal-death');
+}
+function recordDeath(){
+  const a=D.animals.find(x=>x.id===document.getElementById('death-animal-id').value);if(!a)return;
+  const count=parseInt(document.getElementById('death-count').value)||1;
+  if(count>a.currentQty){alert(`Only ${a.currentQty} remaining.`);return;}
+  a.deaths=a.deaths||[];
+  a.deaths.push({count,date:document.getElementById('death-date').value,
+    reason:document.getElementById('death-reason').value,note:document.getElementById('death-note').value.trim()});
+  a.currentQty=Math.max(0,(a.currentQty||a.qty)-count);
+  save(D); closeModal('modal-death'); renderAnimals();
+}
+
+function openSellModal(id){
+  document.getElementById('sell-animal-id').value=id;
+  document.getElementById('sell-date').value=new Date().toISOString().split('T')[0];
+  ['sell-price','sell-notes'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('sell-preview').innerHTML='';
+  openModal('modal-sell');
+}
+function updateSellPreview(){
+  const a=D.animals.find(x=>x.id===document.getElementById('sell-animal-id').value);if(!a)return;
+  const price=parseFloat(document.getElementById('sell-price').value)||0;
+  const tc=totCost(a),gp=price-tc;
+  const cpct=a.caretaker?.pct||0;
+  const cshare=Math.round(gp*(cpct/100));
+  const pp=Math.round((gp-cshare)/3);
+  const s=gp>=0?'+':'',cls=gp>=0?'alert-green':'alert-red';
+  let html=`<div class="sell-box ${cls}" style="background:${gp>=0?'var(--green-bg)':'var(--red-bg)'};">
+    <div class="sell-line"><span>Total cost</span><span>${fmt(tc)}</span></div>
+    <div class="sell-line"><span>Sale price</span><span>${fmt(price)}</span></div>
+    <div class="sell-line" style="border-top:1px solid rgba(0,0,0,.08);margin-top:4px;padding-top:8px;"><span>Gross profit</span><strong>${s}${fmt(gp)}</strong></div>`;
+  if(cpct>0) html+=`<div class="sell-line"><span>${a.caretaker.name||'Caretaker'} (${cpct}%)</span><span style="color:var(--amber);">${s}${fmt(cshare)}</span></div>`;
+  html+=`<div class="sell-line total"><span>Each partner gets</span><strong style="color:${gp>=0?'var(--green)':'var(--red)'};">${s}${fmt(pp)}</strong></div></div>`;
+  document.getElementById('sell-preview').innerHTML=html;
+}
+function sellAnimal(){
+  const a=D.animals.find(x=>x.id===document.getElementById('sell-animal-id').value);if(!a)return;
+  const price=parseFloat(document.getElementById('sell-price').value)||0;
+  if(!price){alert('Enter sale price.');return;}
+  const tc=totCost(a),gp=price-tc;
+  const cpct=a.caretaker?.pct||0;
+  const cshare=Math.round(gp*(cpct/100));
+  a.sold=true; a.saleDate=document.getElementById('sell-date').value;
+  a.salePrice=price; a.saleNotes=document.getElementById('sell-notes').value.trim();
+  a.caretaker={...a.caretaker,share:cshare};
+  a.perPartner=Math.round((gp-cshare)/3);
+  save(D); closeModal('modal-sell'); renderAnimals(); renderDashboard();
+}
+
+function openNoteModal(id){
+  document.getElementById('note-animal-id').value=id;
+  document.getElementById('note-text').value='';
+  openModal('modal-note');
+}
+function saveNote(){
+  const a=D.animals.find(x=>x.id===document.getElementById('note-animal-id').value);if(!a)return;
+  const text=document.getElementById('note-text').value.trim();if(!text)return;
+  a.notes=a.notes||[];
+  a.notes.push({date:new Date().toISOString().split('T')[0],text});
+  save(D); closeModal('modal-note'); renderAnimals();
+}
+function delAnimal(id){
+  if(!confirm('Delete animal?'))return;
+  D.animals=D.animals.filter(a=>a.id!==id); save(D); renderAnimals(); renderDashboard();
+}
+
+function animalHTML(a,actions=true){
+  const em=EM[a.type]||'🐾',tc=totCost(a),d=dur(a.buyDate,a.sold?a.saleDate:null);
+  const pr=a.sold?(a.salePrice-tc):null;
+  const ps=pr!=null?(pr>=0?'+':''):'',pc=pr!=null?(pr>=0?'text-green':'text-red'):'';
+  const qty=a.qty||1, curQty=a.currentQty??qty, isMulti=qty>1;
+  const totalDeaths=(a.deaths||[]).reduce((s,d)=>s+d.count,0);
+
+  let exp='';
+  if(a.expenses.length){
+    exp=`<div class="slbl">Expenses</div>`;
+    a.expenses.forEach(e=>{exp+=`<div class="eitem">
+      <div><span style="font-weight:600;">${e.type}</span>${e.desc?` — ${e.desc}`:''}<span style="font-size:11px;color:var(--text3);margin-left:6px;">${e.date}</span></div>
+      <div style="display:flex;align-items:center;gap:7px;">${fmt(e.amount)}${actions&&!a.sold?`<button class="btn btn-sm btn-danger" style="padding:4px 8px;min-height:0;" onclick="delExp('${a.id}','${e.id}')">✕</button>`:''}</div>
+    </div>`;});
+  }
+
+  let deaths='';
+  if((a.deaths||[]).length){
+    deaths=`<div class="slbl" style="margin-top:10px;">Deaths / removals</div>`;
+    a.deaths.forEach(dth=>{deaths+=`<div class="eitem"><div><span style="font-weight:600;">${dth.count} × ${dth.reason}</span>${dth.note?` — ${dth.note}`:''}<span style="font-size:11px;color:var(--text3);margin-left:6px;">${dth.date}</span></div></div>`;});
+  }
+
+  let nts='';
+  if(a.notes&&a.notes.length){
+    nts=`<div class="slbl" style="margin-top:10px;">Notes</div>`;
+    a.notes.forEach(n=>{nts+=`<div class="nbox"><span style="font-size:10px;color:var(--text3);">${n.date} &nbsp;—&nbsp;</span>${n.text}</div>`;});
+  }
+
+  return `<div class="acard ${a.sold?'sold':''}">
+    <div class="atop">
+      <div class="aicon">${em}${isMulti?`<span class="qty-badge">${curQty}</span>`:''}</div>
+      <div style="flex:1;"><div class="aname">${a.name}</div>
+        <div class="atype">${a.type.replace(/^\S+\s/,'')}${isMulti?` &nbsp;·&nbsp; ${curQty}/${qty} alive`:''}${a.caretaker?.name?` &nbsp;·&nbsp; 🧑 ${a.caretaker.name} (${a.caretaker.pct}%)`:''}</div>
+      </div>
+      <div>${a.sold?'<span class="badge badge-green">Sold</span>':'<span class="badge badge-blue">Active</span>'}</div>
+    </div>
+    <div class="mgrid">
+      <div class="mbox"><div class="mlbl">Bought</div><div class="mval">${a.buyDate}</div></div>
+      <div class="mbox"><div class="mlbl">Duration</div><div class="mval">${d}</div></div>
+      <div class="mbox"><div class="mlbl">Purchase cost</div><div class="mval">${fmt(a.purchaseCost)}</div></div>
+      <div class="mbox"><div class="mlbl">Expenses</div><div class="mval">${fmt(totExp(a))}</div></div>
+      <div class="mbox" style="grid-column:1/-1;background:var(--amber-bg);"><div class="mlbl">Total cost</div><div class="mval">${fmt(tc)}</div></div>
+      ${a.sold?`
+      <div class="mbox"><div class="mlbl">Sale price</div><div class="mval">${fmt(a.salePrice)}</div></div>
+      <div class="mbox" style="background:${pr>=0?'var(--green-bg)':'var(--red-bg)'}"><div class="mlbl">Gross profit</div><div class="mval ${pc}">${ps}${fmt(pr)}</div></div>
+      ${a.caretaker?.pct>0?`<div class="mbox" style="background:var(--amber-bg);"><div class="mlbl">${a.caretaker.name||'Caretaker'} (${a.caretaker.pct}%)</div><div class="mval">${ps}${fmt(a.caretaker.share||0)}</div></div>`:''}
+      <div class="mbox" style="grid-column:1/-1;background:${pr>=0?'var(--green-bg)':'var(--red-bg)'}"><div class="mlbl">Each partner gets</div><div class="mval ${pc}" style="font-size:16px;">${ps}${fmt(a.perPartner??Math.round(pr/3))}</div></div>`:''}
+    </div>
+    ${exp}${deaths}${nts}
+    ${actions&&!a.sold?`<div class="aactions">
+      <button class="btn btn-sm" onclick="openAddExpense('${a.id}')">+ Expense</button>
+      <button class="btn btn-sm" onclick="openNoteModal('${a.id}')">+ Note</button>
+      ${isMulti?`<button class="btn btn-sm btn-danger" onclick="openDeathModal('${a.id}')">Death</button>`:''}
+      <button class="btn btn-sm btn-success" onclick="openSellModal('${a.id}')">Sell</button>
+      <button class="btn btn-sm btn-danger" onclick="delAnimal('${a.id}')" style="margin-left:auto;">Delete</button>
+    </div>`:a.sold?`<div style="font-size:12px;color:var(--text3);margin-top:8px;">Sold ${a.saleDate}${a.saleNotes?' — '+a.saleNotes:''}</div>`:''}
+  </div>`;
+}
+
+let activeFilter='all';
+function renderAnimals(){
+  const search=(document.getElementById('animal-search')?.value||'').toLowerCase();
+  const types=[...new Set(D.animals.filter(a=>!a.sold).map(a=>a.type))];
+
+  // Filter chips
+  const fr=document.getElementById('filter-row');
+  if(fr){
+    fr.innerHTML=['all',...types].map(t=>`<button class="filter-chip ${activeFilter===t?'active':''}" onclick="activeFilter='${t}';renderAnimals();">${t==='all'?'All':t}</button>`).join('');
+  }
+
+  let list=D.animals.filter(a=>!a.sold);
+  if(activeFilter!=='all') list=list.filter(a=>a.type===activeFilter);
+  if(search) list=list.filter(a=>a.name.toLowerCase().includes(search)||a.type.toLowerCase().includes(search));
+
+  document.getElementById('animals-list').innerHTML=list.length?list.map(a=>animalHTML(a)).join(''):'<div class="empty-state"><div class="eicon">🐄</div><p>No animals found</p></div>';
+}
+
+/* HISTORY */
+function renderHistory(){
+  const sort=document.getElementById('history-sort')?.value||'recent';
+  let sold=[...D.animals.filter(a=>a.sold)];
+  if(sort==='recent') sold.sort((a,b)=>b.saleDate.localeCompare(a.saleDate));
+  else if(sort==='profit-high') sold.sort((a,b)=>(b.perPartner??0)-(a.perPartner??0));
+  else if(sort==='profit-low') sold.sort((a,b)=>(a.perPartner??0)-(b.perPartner??0));
+  else if(sort==='duration') sold.sort((a,b)=>{
+    const dm=x=>{const f=new Date(x.buyDate),t=new Date(x.saleDate);return(t-f);};
+    return dm(b)-dm(a);
+  });
+
+  document.getElementById('history-list').innerHTML=sold.length?sold.map(a=>animalHTML(a,false)).join(''):'<div class="empty-state"><div class="eicon">📋</div><p>No sold animals yet</p></div>';
+  const ti=sold.reduce((s,a)=>s+totCost(a),0),tr=sold.reduce((s,a)=>s+(a.salePrice||0),0),tp=tr-ti;
+  const tpp=sold.reduce((s,a)=>s+(a.perPartner??Math.round((a.salePrice-totCost(a))/3)),0);
+  document.getElementById('history-summary').innerHTML=`<div class="stat-grid" style="margin-bottom:0;">
+    <div class="stat"><div class="slabel">Sold</div><div class="svalue">${sold.length}</div></div>
+    <div class="stat"><div class="slabel">Invested</div><div class="svalue">${fmt(ti)}</div></div>
+    <div class="stat"><div class="slabel">Gross profit</div><div class="svalue ${tp>=0?'green':'red'}">${tp>=0?'+':''}${fmt(tp)}</div></div>
+    <div class="stat"><div class="slabel">Each partner</div><div class="svalue ${tpp>=0?'green':'red'}">${tpp>=0?'+':''}${fmt(tpp)}</div></div>
+  </div>`;
+}
+
+/* REPORTS */
+function renderReports(){
+  const now=new Date();
+  document.getElementById('rep-year').value=now.getFullYear();
+  document.getElementById('rep-month').value=now.getMonth()+1;
+  renderExpBreakdown();
+  renderGoalPreview();
+}
+function renderReportsIfActive(){
+  if(document.getElementById('page-reports').classList.contains('active')) renderReports();
+}
+
+function generateReport(){
+  const y=parseInt(document.getElementById('rep-year').value);
+  const m=parseInt(document.getElementById('rep-month').value);
+  const key=`${y}-${String(m).padStart(2,'0')}`;
+  const mo=D.months.find(x=>x.key===key);
+  const soldThisMonth=D.animals.filter(a=>a.sold&&a.saleDate&&a.saleDate.startsWith(key));
+  const boughtThisMonth=D.animals.filter(a=>a.buyDate&&a.buyDate.startsWith(key));
+  const expThisMonth=D.animals.flatMap(a=>a.expenses.filter(e=>e.date&&e.date.startsWith(key)));
+  const totalExp=expThisMonth.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const totalRevenue=soldThisMonth.reduce((s,a)=>s+(a.salePrice||0),0);
+  const totalProfit=soldThisMonth.reduce((s,a)=>s+(a.perPartner??0)*3,0);
+
+  let html=`<div style="background:var(--surface2);border-radius:var(--rsm);padding:14px;">`;
+  html+=`<div style="font-size:14px;font-weight:700;margin-bottom:12px;">📋 ${MF[m-1]} ${y}</div>`;
+
+  if(mo){
+    html+=`<div class="slbl">Contributions</div>`;
+    D.settings.partners.forEach(p=>{
+      const st=mo.payments[p.id]||'pending';
+      const badge=st==='paid'?'badge-green':st==='missed'?'badge-red':'badge-gray';
+      html+=`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px;"><span>${p.name}</span><span class="badge ${badge}">${st==='paid'?'✓ Paid':st==='missed'?'✗ Missed':'Pending'}</span></div>`;
+    });
+  } else {
+    html+=`<div style="font-size:13px;color:var(--text3);margin-bottom:8px;">No contribution record for this month.</div>`;
+  }
+
+  html+=`<div class="slbl" style="margin-top:12px;">Activity</div>`;
+  html+=`<div style="font-size:13px;line-height:2;">
+    🐄 Animals bought: <strong>${boughtThisMonth.length}</strong><br>
+    💰 Animals sold: <strong>${soldThisMonth.length}</strong><br>
+    💸 Total expenses: <strong>${fmt(totalExp)}</strong><br>
+    📈 Revenue from sales: <strong>${fmt(totalRevenue)}</strong><br>
+    🏦 Net profit (partners): <strong>${fmt(totalProfit)}</strong>
+  </div>`;
+
+  if(soldThisMonth.length){
+    html+=`<div class="slbl" style="margin-top:12px;">Sales this month</div>`;
+    soldThisMonth.forEach(a=>{html+=`<div style="font-size:13px;padding:4px 0;">${EM[a.type]||'🐾'} ${a.name} — ${fmt(a.salePrice)} (${fmt(a.perPartner??0)}/partner)</div>`;});
+  }
+
+  html+=`</div>`;
+
+  // Copy button
+  html+=`<button class="btn btn-sm" style="margin-top:10px;" onclick="copyReport()">📋 Copy summary</button>`;
+  html+=`<div id="copy-text" style="display:none;">${MF[m-1]} ${y} Summary\n`;
+  if(mo){D.settings.partners.forEach(p=>{const st=mo.payments[p.id]||'pending';html+=`${p.name}: ${st}\n`;});}
+  html+=`Bought: ${boughtThisMonth.length}, Sold: ${soldThisMonth.length}\nExpenses: ${fmt(totalExp)}, Revenue: ${fmt(totalRevenue)}\nProfit (total): ${fmt(totalProfit)}</div>`;
+
+  document.getElementById('report-out').innerHTML=html;
+}
+function copyReport(){
+  const el=document.getElementById('copy-text');
+  if(!el)return;
+  navigator.clipboard?.writeText(el.textContent).then(()=>alert('Copied!')).catch(()=>alert('Select and copy manually.'));
+}
+
+function renderExpBreakdown(){
+  const allExp=D.animals.flatMap(a=>a.expenses);
+  const cats={};
+  allExp.forEach(e=>{
+    cats[e.type]=(cats[e.type]||0)+(parseFloat(e.amount)||0);
+  });
+  const total=Object.values(cats).reduce((s,v)=>s+v,0);
+  const el=document.getElementById('exp-breakdown');
+  if(!total){el.innerHTML='<div style="font-size:13px;color:var(--text3);">No expenses recorded yet.</div>';return;}
+  const sorted=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+  el.innerHTML=sorted.map(([cat,amt],i)=>{
+    const pct=Math.round((amt/total)*100);
+    return `<div class="exp-chart-row">
+      <div class="exp-label">${cat}</div>
+      <div class="exp-bar-wrap"><div class="exp-bar" style="width:${pct}%;background:${EXP_COLORS[i%EXP_COLORS.length]};"></div></div>
+      <div class="exp-pct">${pct}%</div>
+      <div style="font-size:12px;color:var(--text2);width:80px;text-align:right;">${fmt(amt)}</div>
+    </div>`;
+  }).join('');
+}
+
+/* GOAL SYSTEM
+   D.settings.goal  = active goal: {name, target, deadline, startBalance}
+   D.settings.goals = completed goals array: [{name, target, deadline, startBalance, endBalance, actualSpent, leftover, completedOn}]
+   "balance" = total contributions - total purchase costs of all animals
+*/
+
+function calcPool(){
+  // Total contributions paid
+  const contributed={};
+  D.settings.partners.forEach(p=>{contributed[p.id]=0;});
+  D.months.forEach(mo=>{D.settings.partners.forEach(p=>{
+    if(mo.payments[p.id]==='paid')contributed[p.id]+=p.monthlyAmount;
+  });});
+  const totalContrib=Object.values(contributed).reduce((s,v)=>s+v,0);
+  // Subtract ALL spending: purchase costs + all expenses
+  const totalPurchases=D.animals.reduce((s,a)=>s+(parseFloat(a.purchaseCost)||0),0);
+  const totalExpenses=D.animals.reduce((s,a)=>s+a.expenses.reduce((es,e)=>es+(parseFloat(e.amount)||0),0),0);
+  return totalContrib - totalPurchases - totalExpenses;
+}
+
+function calcRawContrib(){
+  const contributed={};
+  D.settings.partners.forEach(p=>{contributed[p.id]=0;});
+  D.months.forEach(mo=>{D.settings.partners.forEach(p=>{
+    if(mo.payments[p.id]==='paid')contributed[p.id]+=p.monthlyAmount;
+  });});
+  return Object.values(contributed).reduce((s,v)=>s+v,0);
+}
+
+function saveGoal(){
+  const name=document.getElementById('goal-name').value.trim();
+  const target=parseFloat(document.getElementById('goal-target').value)||0;
+  const deadline=document.getElementById('goal-deadline').value;
+  if(!name||!target){alert('Enter goal name and target amount.');return;}
+  // startBalance = current fund balance (leftover from previous goals already included)
+  const startBalance=calcPool();
+  D.settings.goal={name,target,deadline,startBalance};
+  if(!D.settings.goals) D.settings.goals=[];
+  save(D);
+  renderGoalPreview();
+  renderDashboard();
+}
+
+function completeGoal(){
+  const g=D.settings.goal;
+  if(!g) return;
+  const actualSpent=parseFloat(prompt(`How much did you actually spend on "${g.name}"?\n(Enter the real purchase cost)`))||0;
+  if(!actualSpent){return;}
+  const startBal=g.startBalance||0;
+  const savedForGoal=calcPool()-startBal+actualSpent; // how much was saved toward this goal
+  // leftover = what was budgeted (target) minus actual spend, kept in balance
+  // since purchase cost is already subtracted in calcPool, leftover naturally stays in pool
+  const leftover=calcPool(); // current balance after purchase already deducted
+  if(!D.settings.goals) D.settings.goals=[];
+  D.settings.goals.push({
+    name:g.name, target:g.target, deadline:g.deadline,
+    startBalance:startBal, actualSpent, leftover,
+    completedOn:new Date().toISOString().split('T')[0]
+  });
+  D.settings.goal=null;
+  save(D);
+  renderGoalPreview();
+  renderDashboard();
+  alert(`✅ Goal "${g.name}" completed!\nActual spend: ${fmt(actualSpent)}\nRemaining balance carried forward: ${fmt(leftover)}`);
+}
+
+function deleteActiveGoal(){
+  if(!confirm('Cancel this goal?')) return;
+  D.settings.goal=null; save(D); renderGoalPreview(); renderDashboard();
+}
+
+function renderGoalPreview(){
+  const g=D.settings.goal;
+  const balance=calcPool();
+  const formEl=document.getElementById('goal-form');
+  const activeEl=document.getElementById('active-goal-view');
+  const titleEl=document.getElementById('goal-form-title');
+
+  if(g&&g.target){
+    // Show active goal, hide form
+    const savedSoFar=balance-(g.startBalance||0)+g.target; // how much toward goal
+    const progress=balance-g.startBalance; // how much saved since goal started (net)
+    const pct=Math.min(100,Math.max(0,Math.round(((progress+g.target)/g.target)*100)));
+    // Simpler: show current pool vs target
+    const poolPct=Math.min(100,Math.max(0,Math.round((balance/g.target)*100)));
+    titleEl.textContent='Active goal';
+    formEl.style.display='none';
+    activeEl.style.display='block';
+    activeEl.innerHTML=`
+      <div style="background:var(--green-bg);border-radius:var(--rsm);padding:14px;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:14px;font-weight:700;color:var(--green);">${g.name}</span>
+          <span style="font-size:16px;font-weight:700;color:var(--green);">${poolPct}%</span>
+        </div>
+        <div class="prog-wrap" style="margin:0 0 8px;"><div class="prog-bar" style="width:${poolPct}%;"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--green);">
+          <span>Current balance: ${fmt(balance)}</span><span>Target: ${fmt(g.target)}</span>
+        </div>
+        ${g.deadline?`<div style="font-size:12px;color:var(--green);margin-top:4px;">Deadline: ${g.deadline}</div>`:''}
+        ${balance>=g.target?`<div style="font-size:13px;font-weight:600;color:var(--green);margin-top:8px;">🎉 Target reached! Ready to buy.</div>`:''}
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-success btn-sm" onclick="completeGoal()">✓ Complete goal</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteActiveGoal()">Cancel goal</button>
+      </div>`;
+  } else {
+    // Show form for new goal
+    titleEl.textContent='Savings goal';
+    formEl.style.display='block';
+    activeEl.style.display='none';
+    document.getElementById('goal-name').value='';
+    document.getElementById('goal-target').value='';
+    document.getElementById('goal-deadline').value='';
+  }
+
+  // Render goal history
+  const goals=D.settings.goals||[];
+  const histEl=document.getElementById('goal-history-list');
+  if(histEl){
+    if(!goals.length){
+      histEl.innerHTML='<div style="font-size:13px;color:var(--text3);">No completed goals yet.</div>';
+    } else {
+      histEl.innerHTML=goals.slice().reverse().map((cg,i)=>`
+        <div style="padding:10px 0;border-bottom:1px solid var(--border);">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-weight:600;font-size:14px;">✅ ${cg.name}</div>
+            <span class="badge badge-green">Done</span>
+          </div>
+          <div style="font-size:12px;color:var(--text3);margin-top:4px;line-height:1.8;">
+            Target: ${fmt(cg.target)} &nbsp;·&nbsp; Spent: ${fmt(cg.actualSpent)}<br>
+            Leftover carried forward: <strong style="color:var(--green);">${fmt(cg.leftover)}</strong><br>
+            Completed: ${cg.completedOn}
+          </div>
+        </div>`).join('');
+    }
+  }
+}
+
+/* DASHBOARD */
+function renderDashboard(){
+  document.getElementById('header-title').textContent=D.settings.groupName||'Livestock Tracker';
+  const ps=D.settings.partners,ms=D.months;
+  const contrib={},missed={};
+  ps.forEach(p=>{contrib[p.id]=0;missed[p.id]=0;});
+  ms.forEach(mo=>{ps.forEach(p=>{
+    if(mo.payments[p.id]==='paid')contrib[p.id]+=p.monthlyAmount;
+    else if(mo.payments[p.id]==='missed')missed[p.id]++;
+  });});
+  const pool=Object.values(contrib).reduce((s,v)=>s+v,0);
+  const active=D.animals.filter(a=>!a.sold);
+  const invested=D.animals.reduce((s,a)=>s+totCost(a),0);
+  const profit=D.animals.filter(a=>a.sold).reduce((s,a)=>s+(a.perPartner??0)*3,0);
+
+  document.getElementById('dash-alerts').innerHTML=ps.filter(p=>missed[p.id]>0)
+    .map(p=>`<div class="alert alert-amber">⚠️ <strong>${p.name}</strong> missed ${missed[p.id]} month${missed[p.id]!==1?'s':''} — owes ${fmt(missed[p.id]*p.monthlyAmount)}</div>`).join('');
+
+  const balance=calcPool();
+  const totalPurchases=D.animals.reduce((s,a)=>s+(parseFloat(a.purchaseCost)||0),0);
+  const totalExpenses=D.animals.reduce((s,a)=>s+a.expenses.reduce((es,e)=>es+(parseFloat(e.amount)||0),0),0);
+  const totalSpent=totalPurchases+totalExpenses;
+
+  // Balance card
+  const balCard=document.getElementById('balance-card');
+  if(balCard){
+    balCard.innerHTML=`
+      <div style="margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Current account balance</div>
+        <div style="font-size:36px;font-weight:800;letter-spacing:-1.5px;color:${balance>=0?'var(--green)':'var(--red)'};">${fmt(balance)}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:4px;">${fmt(pool)} total contributed &nbsp;−&nbsp; ${fmt(totalSpent)} total spent</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+        <div style="background:var(--surface2);border-radius:var(--rsm);padding:8px 10px;">
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Contributions</div>
+          <div style="font-size:14px;font-weight:700;">${fmt(pool)}</div>
+        </div>
+        <div style="background:var(--amber-bg);border-radius:var(--rsm);padding:8px 10px;">
+          <div style="font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Total Invested</div>
+          <div style="font-size:14px;font-weight:700;color:var(--amber);">${fmt(invested)}</div>
+        </div>
+        <div style="background:var(--red-bg);border-radius:var(--rsm);padding:8px 10px;">
+          <div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Expenses</div>
+          <div style="font-size:14px;font-weight:700;color:var(--red);">${fmt(totalExpenses)}</div>
+        </div>
+      </div>`;
+  }
+
+  document.getElementById('dash-stats').innerHTML=`
+    <div class="stat"><div class="slabel">Active animals</div><div class="svalue">${active.length}</div></div>
+    <div class="stat"><div class="slabel">Profit earned</div><div class="svalue ${profit>=0?'green':'red'}">${profit>=0?'+':''}${fmt(profit)}</div></div>`;
+  const g=D.settings.goal;
+  const gc=document.getElementById('goal-card');
+  if(g&&g.target){
+    const pct=Math.min(100,Math.max(0,Math.round((balance/g.target)*100)));
+    gc.style.display='block';
+    document.getElementById('goal-title').textContent=g.name;
+    document.getElementById('goal-sub').textContent=`${fmt(balance)} of ${fmt(g.target)}${g.deadline?' · '+g.deadline:''}`;
+    document.getElementById('goal-pct').textContent=pct+'%';
+    document.getElementById('goal-bar').style.width=pct+'%';
+  } else { gc.style.display='none'; }
+
+  document.getElementById('partner-balances').innerHTML=ps.map(p=>{
+    const out=missed[p.id]*p.monthlyAmount;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);gap:8px;">
+      <div><div style="font-weight:600;">${p.name}</div>
+        <div style="font-size:12px;color:var(--text3);">Paid ${fmt(contrib[p.id])} · ${fmt(p.monthlyAmount)}/mo${out>0?` · <span style="color:var(--red);">Owes ${fmt(out)}</span>`:''}</div>
+      </div>
+      ${out>0?'<span class="badge badge-red">Debt</span>':'<span class="badge badge-green">OK</span>'}
+    </div>`;
+  }).join('');
+
+  document.getElementById('active-count').textContent=active.length;
+  document.getElementById('dash-animals').innerHTML=active.length
+    ?active.map(a=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;" onclick="showPage('animals')">
+        <div><div style="font-weight:600;">${EM[a.type]||'🐾'} ${a.name}${a.qty>1?` (${a.currentQty??a.qty})`:''}</div>
+          <div style="font-size:12px;color:var(--text3);">${dur(a.buyDate)} · ${fmt(totCost(a))}${a.caretaker?.name?` · 🧑 ${a.caretaker.name}`:''}</div></div>
+        <span style="color:var(--text3);font-size:16px;">›</span>
+      </div>`).join('')
+    :'<p style="color:var(--text3);font-size:13px;">No active animals. <a href="#" onclick="showPage(\'animals\');return false;">Add one →</a></p>';
+}
+
+/* MODALS */
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(el=>{el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});});
+renderDashboard();
+</script>
+</body>
+</html>
